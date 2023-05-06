@@ -2,8 +2,10 @@
 mixedRegex="^[a-zA-Z][a-zA-Z0-9]+$"
 numRegex="^[0-9]+$"
 stringRegex="^[a-zA-Z]+$"
+currentDir=${PWD}
+echo ${currentDir}
+
 function mainMenu {
-  clear
 
   echo "DBMS MAIN MENU"
 
@@ -19,23 +21,20 @@ function mainMenu {
     createDB
 
   elif [ $n -eq 2 ]; then
-    echo "you choose to list database"
-    ls -d */
+    listDBs
   # for files ls p |grep -v /
+
   elif [ $n -eq 3 ]; then
     echo "You choose to connect to database"
     read -p "enter a data base name to connect " dbConnect
-    cd $dbConnect
+    cd databases/$dbConnect
+
   elif [ $n -eq 4 ]; then
-    echo "you choose to drop database"
-    read -p "Enter a databse name to delete " dbDelete
-    if [ -d $dbDelete ]; then
-      rmdir $dbDelete
-    else
-      echo "Database is not exist"
-    fi
+    dropDB
   else
     echo "invalid option"
+    echo "please enter a valid option"
+
   fi
 }
 
@@ -47,20 +46,36 @@ function createDB {
     read -rp "enter the Database name " dbName
   done
   if [ ! -d "${dbName}" ]; then
-    mkdir "${dbName}"
+    mkdir -p "${currentDir}"/databases/"${dbName}"
 
     echo " you've created ${dbName}"
+
   else
     echo "data base already exists"
+
   fi
 }
 
-# function listDBs{
+function listDBs {
+  echo "you choose to list database"
+  cd "${currentDir}"/databases
+  ls
+  cd "${currentDir}"
 
-# }
-# function dropDB{
-
-# }
+}
+function dropDB {
+  echo "you choose to drop database"
+  cd "${currentDir}"/databases
+  ls
+  cd "${currentDir}"
+  read -rp "Enter a databse name to delete " dbDelete
+  if [ -d "${currentDir}"/databases/"${dbDelete}" ]; then
+    rmdir "${currentDir}"/databases/"${dbDelete}"
+    echo "${dbDelete}" deleted successfully
+  else
+    echo "Database is not exist"
+  fi
+}
 # function connectDB{
 
 # }
