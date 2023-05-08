@@ -2,8 +2,9 @@
 mixedRegex="^[a-zA-Z][a-zA-Z0-9]+$"
 numRegex="^[0-9]+$"
 stringRegex="^[a-zA-Z]+$"
-currentDir=${PWD}
-echo ${currentDir}
+scriptDir=${PWD}
+currentDB=""
+echo ${scriptDir}
 
 function mainMenu {
 
@@ -21,19 +22,15 @@ function mainMenu {
     createDB
 
   elif [ $n -eq 2 ]; then
+    echo "you choose to list database"
     listDBs
   # for files ls p |grep -v /
 
   elif [ $n -eq 3 ]; then
-    echo "You choose to connect to database"
-    read -p "enter a data base name to connect " dbConnect
-    cd databases/$dbConnect
+    connectDB
 
   elif [ $n -eq 4 ]; then
     dropDB
-  else
-    echo "invalid option"
-    echo "please enter a valid option"
 
   fi
 }
@@ -46,7 +43,7 @@ function createDB {
     read -rp "enter the Database name " dbName
   done
   if [ ! -d "${dbName}" ]; then
-    mkdir -p "${currentDir}"/databases/"${dbName}"
+    mkdir -p "${scriptDir}"/databases/"${dbName}"
 
     echo " you've created ${dbName}"
 
@@ -55,22 +52,32 @@ function createDB {
 
   fi
 }
+function connectDB {
 
+  echo "You choose to connect to database"
+  listDBs
+  read -rp "enter a data base name to connect " dbName
+  if [ -d "${scriptDir}"/databases/"${dbName}" ]; then
+    cd databases/${dbName}
+    echo " you're connected to ${dbName}"
+    pwd
+  else
+    echo "no database with such name"
+  fi
+
+}
 function listDBs {
-  echo "you choose to list database"
-  cd "${currentDir}"/databases
+  cd "${scriptDir}"/databases
   ls
-  cd "${currentDir}"
+  cd "${scriptDir}"
 
 }
 function dropDB {
   echo "you choose to drop database"
-  cd "${currentDir}"/databases
-  ls
-  cd "${currentDir}"
+  listDBs
   read -rp "Enter a databse name to delete " dbDelete
-  if [ -d "${currentDir}"/databases/"${dbDelete}" ]; then
-    rmdir "${currentDir}"/databases/"${dbDelete}"
+  if [ -d "${scriptDir}"/databases/"${dbDelete}" ]; then
+    rm -r "${scriptDir}"/databases/"${dbDelete}"
     echo "${dbDelete}" deleted successfully
   else
     echo "Database is not exist"

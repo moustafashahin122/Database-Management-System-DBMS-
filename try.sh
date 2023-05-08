@@ -17,6 +17,8 @@
 # echo $vvv
 # fi
 
-if ((1)); then
-    echo 0
+if [ 0 ]; then
+    echo yess
+    else
+    echo nooo
 fi
