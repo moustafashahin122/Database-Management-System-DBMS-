@@ -1,5 +1,5 @@
 #!/bin/bash
-mixedRegex="^[a-zA-Z][a-zA-Z0-9]+$"
+mixedRegex="^[a-zA-Z][a-zA-Z0-9]{4,}$"
 numRegex="^[0-9]+$"
 stringRegex="^[a-zA-Z]+$"
 scriptDir=${PWD}
@@ -51,6 +51,7 @@ read x
 
 
 function mainMenu {
+  echo "==============================================="
   echo "DBMS MAIN MENU"
   echo "select the operation ***********"
   echo "  1) Create database"
@@ -60,14 +61,18 @@ function mainMenu {
   read -r n
   if [ $n -eq 1 ]; then
     createDB
+    mainMenu
   elif [ $n -eq 2 ]; then
     echo "you choose to list database"
     listDBs
+    mainMenu
   # for files ls p |grep -v /
   elif [ $n -eq 3 ]; then
     connectDB
+
   elif [ $n -eq 4 ]; then
     dropDB
+    mainMenu
   fi
 }
 

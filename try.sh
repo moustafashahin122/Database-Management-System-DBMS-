@@ -16,9 +16,4 @@
 
 # echo $vvv
 # fi
-
-if [ 0 ]; then
-    echo yess
-    else
-    echo nooo
-fi
+printf " hello \n" 
