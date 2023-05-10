@@ -1,19 +1,10 @@
 #!/bin/bash
 
-# function validInput {
-#   regex="^[a-zA-Z][a-zA-Z0-9]+$"
+# mixedRegex="^[a-zA-Z][a-zA-Z0-9]{4,}$"
 
-#   if [[ $1 =~ ${regex} ]]; then
-#     echo 1
-#   else
-#     echo 0
-#   fi
-# }
-
-# vvv=$(validInput mmm)
-# if [[ $vvv == 1 ]];
-# then
-
-# echo $vvv
-# fi
-printf " hello \n" 
+# validInput $mixedRegex
+# m=${input}
+# echo $m
+if [ "1" -eq 1 ]; then
+    echo here
+fi
