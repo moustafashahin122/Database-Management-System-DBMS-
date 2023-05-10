@@ -59,7 +59,7 @@ function connectDB {
 
         echo " you're connected to ${dbName}"
         pwd
-        
+
     else
         echo "no database with such name"
     fi
