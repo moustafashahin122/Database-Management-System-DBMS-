@@ -6,6 +6,50 @@ scriptDir=${PWD}
 currentDB=""
 echo ${scriptDir}
 
+function tables {
+echo "tables MAIN MENU";
+
+echo "select the operation for table"
+echo "  1) Create Table "
+echo "  2) List Tables"
+echo "  3) Drop Table"
+echo "  4)Insert into Table" 
+echo "  5)Select From Table" 
+echo "  6)Delete From Table" 
+echo "  7)Update Table" 
+
+read x
+  if [ $x -eq 1 ]
+  then
+ echo "you choose to Create Table" 
+
+   elif [ $x -eq 2 ]
+  then
+   echo "you choose to list tables"
+  ls 
+  
+   elif [ $x -eq 3 ]
+  then
+  echo "You choose to Drop Table"
+   elif [ $x -eq 4 ]
+  then
+   echo "you choose to Insert into Table"
+   elif [ $x -eq 5 ]
+  then
+   echo "you choose to Select From Table"
+   elif [ $x -eq 6 ]
+  then
+   echo "you choose to Delete From Table "
+   elif [ $x -eq 7 ]
+  then
+   echo "you choose to Update Table"
+ 
+  else 
+   echo "invalid option"
+  fi
+} 
+
+
 function mainMenu {
   echo "DBMS MAIN MENU"
   echo "select the operation ***********"
@@ -47,9 +91,10 @@ function connectDB {
   echo "enter a data base name to connect "
   read -r dbName
   if [ -d "${scriptDir}"/databases/"${dbName}" ]; then
-    cd databases/${dbName}
+    cd databases/${dbName} 2>> ./.error.log
     echo " you're connected to ${dbName}"
     pwd
+    tables
   else
     echo "no database with such name"
   fi
