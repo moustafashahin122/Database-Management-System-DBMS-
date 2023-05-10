@@ -19,25 +19,25 @@ echo "  5) Select From Table"
 echo "  6) Delete From Table"
 echo "  7) Update Table"
 
-read n
-if [ $n -eq 1 ]; then
+read -r n
+if [ "$n" -eq 1 ]; then
   echo "you choose to Create Table"
   createTable
 
-elif [ $n -eq 2 ]; then
+elif [ "$n" -eq 2 ]; then
   echo "you choose to list tables"
   ls
 
-elif [ $n -eq 3 ]; then
+elif [ "$n" -eq 3 ]; then
   echo "You choose to Drop Table"
 
-elif [ $n -eq 4 ]; then
+elif [ "$n" -eq 4 ]; then
   echo "you choose to Insert into Table"
-elif [ $n -eq 5 ]; then
+elif [ "$n" -eq 5 ]; then
   echo "you choose to Select From Table"
-elif [ $n -eq 6 ]; then
+elif [ "$n" -eq 6 ]; then
   echo "you choose to Delete From Table "
-elif [ $n -eq 7 ]; then
+elif [ "$n" -eq 7 ]; then
   echo "you choose to Update Table"
 
 else
