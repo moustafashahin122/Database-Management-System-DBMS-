@@ -54,59 +54,6 @@ function tablesMenu {
 }
 
 # *********************************************************************************
-function isTypeValid {
-  if [[ $1 == num ]] || [[ $1 == string ]]; then
-    echo true
-  else
-    echo false
-  fi
-}
-#Takes 1 parameter :
-# $1 -> the database row
-# returns the pk column position if exists, 0 in other cases.
-function findPrimaryKey {
-  IFS=':' read -a splitted_inputs <<<"$1"
-  for ((k = 0; k < ${#splitted_inputs[@]}; k++)); do
-    if echo ${splitted_inputs[k]} | grep -q "^^"; then
-      return $((k + 1))
-    else
-      if [[ $((${#splitted_inputs[@]} - 1)) == $k ]]; then
-        return 0
-      fi
-    fi
-  done
-}
-
-#Takes 2 parameters :
-# $1 -> line 1 of table file , $2 -> user input
-# returns 1 if the pk column in the user input isn't null, 0 in other cases
-function validateDataPrimaryKey {
-  findPrimaryKey $1
-  line_one_pk_index=$?
-  IFS=':' read -a splitted_inputs <<<"$2"
-  if [[ -z ${splitted_inputs[$((line_one_pk_index - 1))]} ]]; then
-    return 0
-  else
-    return 1
-  fi
-}
-
-#Takes 1 parameter :
-# $1 -> user row input
-# returns 0 if any column in row violates the type, 1 in other cases.
-function validateRowTypes {
-  IFS=':' read -a splitted_inputs <<<"$1"
-  for ((i = 0; i < ${#splitted_inputs[@]}; i++)); do
-    output=$(isTypeValid ${splitted_inputs[i]})
-    if [[ $output == false ]]; then
-      return 0
-    else
-      if [[ $((${#splitted_inputs[@]} - 1)) == $i ]]; then
-        return 1
-      fi
-    fi
-  done
-}
 
 # ***********************************************************************************
 
@@ -117,48 +64,43 @@ function createTable {
   echo " ***********************************"
   if [ ! -f "${tableName}" ]; then
     touch "${tableName}"
+    touch "${tableName}_metadata"
+
+    read -p "Enter number of columns :" cols
+    echo " ***********************************"
+
+    if [[ $cols -eq 0 ]]; then
+      echo Cannot create a table without columns
+      tablesMenu
+    fi
+
+    $(chmod -R 777 "${tableName}")
+    $(chmod -R 777 "${tableName}_metadata")
+    echo "Table Name:"$tableName >>$tableName"_metadata"
+    echo "Number of columns:"$cols >>$tableName"_metadata"
+
+    for ((i = 1; i <= cols; i++)); do
+      if [[ i -eq 1 ]]; then
+        read -p "Enter column $i name as a primary key: " name
+        echo "The primary key for this table is: "$name >>$tableName"_metadata"
+        echo "Names of columns: " >>$tableName"_metadata"
+        echo -n $name"," >>$tableName"_metadata"
+
+      elif [[ i -eq cols ]]; then
+        read -p "Enter column $i name: " name
+        echo -n $name >>$tableName"_metadata"
+      else
+        read -p "Enter column $i name: " name
+        echo -n $name"," >>$tableName"_metadata"
+      fi
+    done
+    clear
     echo " you've created the table ${tableName}"
-
-    while true; do
-      printf 'Enter your columns seperated by ':', and the primary key perceded by ^ ex => ^col1:col2:col3\n'
-      validInput "${mixedRegexWithColon}"
-
-      table_columns="${input}"
-
-      echo "*********************************************"
-      num_of_cols=$(awk -F":" '{print NF}' <<<"${table_columns}")
-      findPrimaryKey $table_columns
-      fpk_return_val=$?
-      if [[ $fpk_return_val == 0 ]]; then
-        printf "\nError: couldn't find pk. Please try again and add a primary key.\n"
-      else
-        echo $table_columns >$tableName
-        break
-      fi
-    done
-    while true; do
-      printf 'Enter your columns data types in the same format.\navailable data types: num , string\n'
-      read table_types
-      echo "*********************************************"
-
-      num_of_types=$(awk -F":" '{print NF}' <<<"${table_types}")
-      if [[ $num_of_types != $num_of_cols ]]; then
-        printf "Error: Your datatypes count is '$num_of_types' \nwhich is not equal to your columns count '$num_of_cols' \n"
-        continue
-      fi
-      validateRowTypes $table_types
-      vrt_return_val=$?
-      if [[ $vrt_return_val == 0 ]]; then
-        printf "Error: a datatype you entered is not num neither string, please try again with the correct data types.\n"
-      else
-        echo $table_types >>$tableName
-        printf "Table $table_name created successfully\n"
-        break
-      fi
-    done
+    tablesMenu
 
   else
     echo "table already exists"
+    tablesMenu
   fi
 }
 
