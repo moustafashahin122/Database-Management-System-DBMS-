@@ -1,7 +1,7 @@
 #!/bin/bash
 mixedRegex="^[a-zA-Z][a-zA-Z0-9]{4,}$"
 mixedRegexWithColon="^([\^a-zA-Z][\^:a-zA-Z0-9]{3,})+$"
-numRegex="^[0-9]+$"
+numRegex="^[1-9]+$"
 stringRegex="^[a-zA-Z]+$"
 scriptDir=${PWD}
 databasesDir="${scriptDir}/databases"
@@ -66,31 +66,39 @@ function createTable {
     touch "${tableName}"
     touch "${tableName}_metadata"
 
-    read -p "Enter number of columns :" cols
+    echo " please enter the number of columns"
+    validInput "${numRegex}"
+    cols="${input}"
     echo " ***********************************"
-
-    if [[ $cols -eq 0 ]]; then
-      echo Cannot create a table without columns
-      tablesMenu
-    fi
 
     $(chmod -R 777 "${tableName}")
     $(chmod -R 777 "${tableName}_metadata")
     echo "Table Name:"$tableName >>$tableName"_metadata"
     echo "Number of columns:"$cols >>$tableName"_metadata"
+    echo " ***********************************"
 
     for ((i = 1; i <= cols; i++)); do
       if [[ i -eq 1 ]]; then
-        read -p "Enter column $i name as a primary key: " name
+
+        echo "Enter column $i name as a primary key: "
+        validInput "${stringRegex}"
+        name="${input}"
+
         echo "The primary key for this table is: "$name >>$tableName"_metadata"
         echo "Names of columns: " >>$tableName"_metadata"
         echo -n $name"," >>$tableName"_metadata"
 
       elif [[ i -eq cols ]]; then
-        read -p "Enter column $i name: " name
+        echo "Enter column $i name: "
+
+        validInput "${stringRegex}"
+        name="${input}"
         echo -n $name >>$tableName"_metadata"
       else
-        read -p "Enter column $i name: " name
+        echo -p "Enter column $i name: "
+
+        validInput "${stringRegex}"
+        name="${input}"
         echo -n $name"," >>$tableName"_metadata"
       fi
     done
