@@ -1,8 +1,8 @@
 #!/bin/bash
-mixedRegex="^[a-zA-Z][a-zA-Z0-9]{4,}$"
+mixedRegex="^[a-zA-Z][a-zA-Z0-9]{3,}$"
 mixedRegexWithColon="^([\^a-zA-Z][\^:a-zA-Z0-9]{3,})+$"
 numRegex="^[1-9]+$"
-stringRegex="^[a-zA-Z]+$"
+stringRegex="^[a-zA-Z]{2,}$"
 scriptDir=${PWD}
 databasesDir="${scriptDir}/databases"
 currentDB=""
@@ -20,7 +20,8 @@ function tablesMenu {
   echo "  5)Select From Table"
   echo "  6)Delete From Table"
   echo "  7)Update Table"
-  echo "  8)disconnect"
+  echo "  8)metadata"
+  echo "  9)disconnect"
 
   read -r x
   echo " ***********************************"
@@ -29,15 +30,15 @@ function tablesMenu {
     createTable
     tablesMenu
   elif [ $x -eq 2 ]; then
-    echo "you choose to list tables"
-    ls
-    pwd
+    listTables
     tablesMenu
 
   elif [ $x -eq 3 ]; then
-    echo "You choose to Drop Table"
+    dropTable
+    tablesMenu
+
   elif [ $x -eq 4 ]; then
-    echo "you choose to Insert into Table"
+    insertIntoTable
   elif [ $x -eq 5 ]; then
     echo "you choose to Select From Table"
   elif [ $x -eq 6 ]; then
@@ -45,6 +46,8 @@ function tablesMenu {
   elif [ $x -eq 7 ]; then
     echo "you choose to Update Table"
   elif [ $x -eq 8 ]; then
+    metadataFun
+  elif [ $x -eq 9 ]; then
     echo "you choose to disconnect"
     mainMenu
 
@@ -53,6 +56,25 @@ function tablesMenu {
   fi
 }
 
+function metadataFun {
+  listTables
+  read -rp "Enter the table name: " tableName
+  if [[ -f ".${tableName}_metadata" ]]; then
+    cat ".${tableName}_metadata"
+    echo
+  else
+    echo There is no table with this name
+  fi
+  echo ------------------
+  tablesMenu
+}
+
+function listTables {
+
+  echo "you choose to list tables"
+  ls
+
+}
 # *********************************************************************************
 
 # ***********************************************************************************
@@ -64,7 +86,7 @@ function createTable {
   echo " ***********************************"
   if [ ! -f "${tableName}" ]; then
     touch "${tableName}"
-    touch "${tableName}_metadata"
+    touch ".${tableName}_metadata"
 
     echo " please enter the number of columns"
     validInput "${numRegex}"
@@ -72,9 +94,9 @@ function createTable {
     echo " ***********************************"
 
     $(chmod -R 777 "${tableName}")
-    $(chmod -R 777 "${tableName}_metadata")
-    echo "Table Name:"$tableName >>$tableName"_metadata"
-    echo "Number of columns:"$cols >>$tableName"_metadata"
+    $(chmod -R 777 ".${tableName}_metadata")
+    echo "Table Name:"$tableName >>".${tableName}_metadata"
+    echo "Number of columns:"$cols >>".${tableName}_metadata"
     echo " ***********************************"
 
     for ((i = 1; i <= cols; i++)); do
@@ -84,22 +106,22 @@ function createTable {
         validInput "${stringRegex}"
         name="${input}"
 
-        echo "The primary key for this table is: "$name >>$tableName"_metadata"
-        echo "Names of columns: " >>$tableName"_metadata"
-        echo -n $name"," >>$tableName"_metadata"
+        echo "The primary key for this table is: "$name >>".${tableName}_metadata"
+        echo "Names of columns: " >>".${tableName}_metadata"
+        echo -n $name"," >>".${tableName}_metadata"
 
       elif [[ i -eq cols ]]; then
         echo "Enter column $i name: "
 
         validInput "${stringRegex}"
         name="${input}"
-        echo -n $name >>$tableName"_metadata"
+        echo -n $name >>".${tableName}_metadata"
       else
-        echo -p "Enter column $i name: "
+        echo "Enter column $i name: "
 
         validInput "${stringRegex}"
         name="${input}"
-        echo -n $name"," >>$tableName"_metadata"
+        echo -n $name"," >>".${tableName}_metadata"
       fi
     done
     clear
@@ -110,6 +132,61 @@ function createTable {
     echo "table already exists"
     tablesMenu
   fi
+}
+
+function dropTable {
+  echo "You choose to Drop Table"
+  listTables
+  echo "Enter a table name to delete "
+  read -r tableDrop
+  if [ -f "${tableDrop}" ]; then
+    rm "${tableDrop}"
+    rm ".${tableDrop}_metadata"
+    echo "${tableDrop}" deleted successfully
+  else
+    echo "table does not exist"
+  fi
+}
+
+function insertIntoTable {
+
+  echo "you choose to Insert into Table"
+  listTables
+  read -rp "Enter the table name: " tableName
+
+  echo "************************************************"
+  if [[ -f "${tableName}" ]]; then
+    typeset -i cols=$(awk -F, '{if(NR==5){print NF}}' ".${tableName}_metadata")
+
+    for ((i = 1; i <= $cols; i++)); do
+      colname=$(awk -F, -v"i=$i" '{if(NR==5){print $i}}' ".${tableName}_metadata")
+      read -p "Enter $colname: " value
+      if [[ $colname -eq id ]]; then
+        pks=$(sed -n '1,$'p "${tableName}" | cut -f1 -d,)
+        for j in $pks; do
+          if [[ $j -eq $value ]]; then
+            echo "cannot repeat primary key"
+            tablesMenu
+          fi
+        done
+      fi
+      if [[ $i != $cols ]]; then
+        echo -n $value"," >>"${tableName}"
+      else
+        echo $value >>"${tableName}"
+      fi
+    done
+    echo "Data has been sorted successfully"
+    echo
+    echo
+    tablesMenu
+
+  else
+    echo "${tableName} doesn't exist"
+    echo
+    tablesMenu
+  fi
+
 }
 
 source MainMenu.sh

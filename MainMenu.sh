@@ -1,6 +1,7 @@
 #!/bin/bash
 
 function mainMenu {
+
     cd ${scriptDir}
     echo " ***********************************"
 
@@ -23,7 +24,6 @@ function mainMenu {
     # for files ls p |grep -v /
     elif [ $n -eq 3 ]; then
         connectDB
-        tablesMenu
 
     elif [ $n -eq 4 ]; then
         dropDB
@@ -59,7 +59,7 @@ function connectDB {
 
         echo " you're connected to ${dbName}"
         pwd
-
+        tablesMenu
     else
         echo "no database with such name"
     fi
