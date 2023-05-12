@@ -1,6 +1,7 @@
 #!/bin/bash
 
 mixedRegex="^([a-z][A-Z])+$"
+
 function validInput {
   # this function taske two argument the first is a string you want to check and the second is a regex
 

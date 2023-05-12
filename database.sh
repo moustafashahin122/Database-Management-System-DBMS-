@@ -50,7 +50,7 @@ function tablesMenu {
   elif [ $x -eq 6 ]; then
     echo "you choose to Delete From Table "
   elif [ $x -eq 7 ]; then
-    echo "you choose to Update Table"
+    echo "you choose to change column name"
     changColName
   elif [ $x -eq 8 ]; then
     metadataFun
