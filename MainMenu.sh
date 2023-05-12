@@ -65,6 +65,8 @@ function connectDB {
     fi
 
 }
+
+
 function listDBs {
 
     cd "${databasesDir}"

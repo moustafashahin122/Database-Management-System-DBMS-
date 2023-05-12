@@ -1,13 +1,8 @@
 #!/bin/bash
-# mixedRegex to validate filesname to be at least 3 charaters and doesn't start with a number and doesn't contain and special character
-mixedRegex="^[a-zA-Z][a-zA-Z0-9]{2,}$"
-
+mixedRegex="^[a-zA-Z][a-zA-Z0-9]{3,}$"
+mixedRegexWithColon="^([\^a-zA-Z][\^:a-zA-Z0-9]{3,})+$"
 numRegex="^[1-9]+$"
-#validate col name to be at least 2 char with no numbers
-colNameRegex="^[a-zA-Z]{2,}$"
-#validate data to be inserted into table to be at least on char
-
-insertRegex="^[a-zA-Z0-9]+$"
+stringRegex="^[a-zA-Z]{2,}$"
 scriptDir=${PWD}
 databasesDir="${scriptDir}/databases"
 currentDB=""
@@ -15,18 +10,18 @@ currentDB=""
 function tablesMenu {
   cd ${currentDB}
   echo "****************************************"
-  echo "TABLES  MENU"
+  echo "tables MAIN MENU"
 
   echo "select the operation for table"
   echo "  1) Create Table "
   echo "  2) List Tables"
   echo "  3) Drop Table"
-  echo "  4) Insert into Table"
-  echo "  5) Select From Table"
-  echo "  6) Delete From Table"
-  echo "  7) change column name"
-  echo "  8) metadata"
-  echo "  9) disconnect"
+  echo "  4)Insert into Table"
+  echo "  5)Select From Table"
+  echo "  6)Delete From Table"
+  echo "  7)Update Table"
+  echo "  8)metadata"
+  echo "  9)disconnect"
 
   read -r x
   echo " ***********************************"
@@ -35,7 +30,6 @@ function tablesMenu {
     createTable
     tablesMenu
   elif [ $x -eq 2 ]; then
-    echo "you choose to list tables"
     listTables
     tablesMenu
 
@@ -51,7 +45,7 @@ function tablesMenu {
     echo "you choose to Delete From Table "
   elif [ $x -eq 7 ]; then
     echo "you choose to Update Table"
-    changColName
+    updateTable
   elif [ $x -eq 8 ]; then
     metadataFun
   elif [ $x -eq 9 ]; then
@@ -78,6 +72,7 @@ function metadataFun {
 
 function listTables {
 
+  echo "you choose to list tables"
   ls
 
 }
@@ -109,7 +104,7 @@ function createTable {
       if [[ i -eq 1 ]]; then
 
         echo "Enter column $i name as a primary key: "
-        validInput "${colNameRegex}"
+        validInput "${stringRegex}"
         name="${input}"
 
         echo "The primary key for this table is: "$name >>".${tableName}_metadata"
@@ -119,13 +114,13 @@ function createTable {
       elif [[ i -eq cols ]]; then
         echo "Enter column $i name: "
 
-        validInput "${colNameRegex}"
+        validInput "${stringRegex}"
         name="${input}"
         echo -n $name >>".${tableName}_metadata"
       else
         echo "Enter column $i name: "
 
-        validInput "${colNameRegex}"
+        validInput "${stringRegex}"
         name="${input}"
         echo -n $name"," >>".${tableName}_metadata"
       fi
@@ -139,39 +134,7 @@ function createTable {
     tablesMenu
   fi
 }
-function changColName {
-  listTables
-  echo "Enter the name of the table you want to update: "
-  validInput "${mixedRegex}"
-  tableName="${input}"
 
-  if [ -f "${tableName}" ]; then
-    echo "Table exists. Enter the name of the column you want to update: "
-
-    awk -F, -v"i=$i" '{if(NR==5){print $0}}' ".${tableName}_metadata"
-
-    validInput "${colNameRegex}"
-    columnName="${input}"
-
-    if grep -q "$columnName" ".${tableName}_metadata"; then
-      echo "Enter the new name for the column: "
-      validInput "${colNameRegex}"
-      newColumnName="${input}"
-
-      sed -i "s/$columnName/$newColumnName/g" ".${tableName}_metadata"
-      echo "Column name updated successfully."
-      awk -F, -v"i=$i" '{if(NR==5){print $0}}' ".${tableName}_metadata"
-
-      tablesMenu
-    else
-      echo "Column does not exist in the table."
-      tablesMenu
-    fi
-  else
-    echo "Table does not exist."
-    tablesMenu
-  fi
-}
 function dropTable {
   echo "You choose to Drop Table"
   listTables
@@ -198,10 +161,7 @@ function insertIntoTable {
 
     for ((i = 1; i <= $cols; i++)); do
       colname=$(awk -F, -v"i=$i" '{if(NR==5){print $i}}' ".${tableName}_metadata")
-      echo "Enter $colname: "
-      validInput "${insertRegex}"
-      value="${input}"
-
+      read -p "Enter $colname: " value
       if [[ $colname -eq id ]]; then
         pks=$(sed -n '1,$'p "${tableName}" | cut -f1 -d,)
         for j in $pks; do
@@ -229,6 +189,37 @@ function insertIntoTable {
   fi
 
 }
+
+
+function updateTable {
+  echo "Enter the name of the table you want to update: "
+  validInput "${mixedRegex}"
+  tableName="${input}"
+
+  if [ -f "${tableName}" ]; then
+    echo "Table exists. Enter the name of the column you want to update: "
+    validInput "${stringRegex}"
+    columnName="${input}"
+
+    if grep -q "$columnName" ".${tableName}_metadata"; then
+      echo "Enter the new name for the column: "
+      validInput "${stringRegex}"
+      newColumnName="${input}"
+
+      sed -i "s/$columnName/$newColumnName/g" ".${tableName}_metadata"
+      echo "Column name updated successfully."
+      tablesMenu
+    else
+      echo "Column does not exist in the table."
+      tablesMenu
+    fi
+  else
+    echo "Table does not exist."
+    tablesMenu
+  fi
+}
+
+
 
 source MainMenu.sh
 
