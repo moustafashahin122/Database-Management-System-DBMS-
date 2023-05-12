@@ -47,8 +47,12 @@ function tablesMenu {
     insertIntoTable
   elif [ $x -eq 5 ]; then
     echo "you choose to Select From Table"
+    selectFromTable
+    tablesMenu
   elif [ $x -eq 6 ]; then
     echo "you choose to Delete From Table "
+    deleteFromTable
+    tablesMenu
   elif [ $x -eq 7 ]; then
     echo "you choose to change column name"
     changColName
@@ -60,6 +64,93 @@ function tablesMenu {
 
   else
     echo "invalid option"
+  fi
+}
+function deleteFromTable {
+
+  clear
+  listTables
+  read -p "Enter table name to delete from: " tableName
+  if [[ -f "${tableName}" ]]; then
+    select choice in "delete all records" "delete a specific record"; do
+      case $REPLY in
+      1)
+        echo "" >"${tableName}"
+        echo All records has been deleted
+        echo
+        tablesMenu
+        ;;
+
+      2)
+        pk_name=$(awk -F, '{if(NR==5){print$1}}' ".${tableName}_metadata")
+        read -p "Enter $pk_name value: " val
+        pks=$(sed -n '1,$'p "${tableName}" | cut -f1 -d,)
+
+        for j in $pks; do
+          if [[ $j -eq "$val" ]]; then
+            grep -v ^$val "${tableName}" >temp.csv
+            mv temp.csv "${tableName}"
+            rm temp.csv 2>/dev/null
+            echo record with id : $val had been deleted
+            tablesMenu
+
+          fi
+        done
+        echo "this record doesn't exist"
+        tablesMenu
+        ;;
+
+      esac
+    done
+
+  else
+    echo There is no table with this name
+    echo
+    echo -----------------
+    tablesMenu
+  fi
+
+}
+
+function selectFromTable {
+  clear
+  echo
+  listTables
+  read -p "Enter table name to select from: " tableName
+  if [[ -f "${tableName}" ]]; then
+    select choice in "select all" "select specific records"; do
+      case $REPLY in
+      1)
+        awk 'BEGIN{FS=","} {if(NR==5){for (i=1;i<=NF;i++) printf "%-10s",$i; print " "}}' ".${tableName}_metadata"
+        awk 'BEGIN{FS=","}{for (i=1;i<=NF;i++) printf "%-10s ",$i; print " "}' "${tableName}"
+        echo
+        echo
+
+        ;;
+
+      2)
+        pk_name=$(awk -F, '{if(NR==5){print$1}}' ".${tableName}_metadata")
+        read -p "Enter $pk_name value: " val
+        awk 'BEGIN{FS=","} {if(NR==5){for (i=1;i<=NF;i++) printf "%-10s",$i; print " "}}' ".${tableName}_metadata"
+        cat "${tableName}" | grep ^$val >temp2
+        awk 'BEGIN{FS=","}{for (i=1;i<=NF;i++) printf "%-10s",$i; print " "}' temp2
+        rm temp2 2>/dev/null
+
+        echo
+        echo
+
+        ;;
+      *)
+        echo wrong choice
+
+        ;;
+      esac
+    done
+    echo
+  else
+    echo
+    echo There is no table with this name
+
   fi
 }
 
@@ -148,7 +239,7 @@ function changColName {
   if [ -f "${tableName}" ]; then
     echo "Table exists. Enter the name of the column you want to update: "
 
-    awk -F, -v"i=$i" '{if(NR==5){print $0}}' ".${tableName}_metadata"
+    awk -F, '{if(NR==5){print $0}}' ".${tableName}_metadata"
 
     validInput "${colNameRegex}"
     columnName="${input}"
@@ -160,7 +251,7 @@ function changColName {
 
       sed -i "s/$columnName/$newColumnName/g" ".${tableName}_metadata"
       echo "Column name updated successfully."
-      awk -F, -v"i=$i" '{if(NR==5){print $0}}' ".${tableName}_metadata"
+      awk -F, '{if(NR==5){print $0}}' ".${tableName}_metadata"
 
       tablesMenu
     else

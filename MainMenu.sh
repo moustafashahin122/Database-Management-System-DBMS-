@@ -58,14 +58,12 @@ function connectDB {
         currentDB="${databasesDir}"/"${dbName}"
 
         echo " you're connected to ${dbName}"
-        pwd
         tablesMenu
     else
         echo "no database with such name"
     fi
 
 }
-
 
 function listDBs {
 
