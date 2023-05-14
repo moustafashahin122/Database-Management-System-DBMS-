@@ -374,7 +374,9 @@ function updateTable {
         values+=("${input}")
       done
 
-      sed -i "s/^${pk_val},.*/${pk_val},${values[*]}/" "${tableName}"
+      sed -i "s/^${pk_val},.*/${pk_val},$(
+        echo "${values[*]}" | tr ' ' ','
+      )/" "${tableName}"
       echo "Row updated successfully."
       selectFromTable
     else
