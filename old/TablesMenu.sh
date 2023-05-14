@@ -12,12 +12,13 @@ function tablesMenu {
   echo "  4) Insert into Table"
   echo "  5) Select From Table"
   echo "  6) Delete From Table"
-  echo "  7) Change Column Name"
-  echo "  8) Metadata"
-  echo "  9) Update Table"
-  echo "  10) Disconnect"
+  echo "  7) change column name"
+  echo "  8) metadata"
+  echo "  9) disconnect"
+  echo "  10) update table"
 
   validInput "${numRegexy}"
+
   x="${input}"
   echo " ***********************************"
 
@@ -28,14 +29,17 @@ function tablesMenu {
     echo "you choose to list tables"
     listTables
     tablesMenu
+
   elif [ $x -eq 3 ]; then
     dropTable
     tablesMenu
+
   elif [ $x -eq 4 ]; then
     insertIntoTable
   elif [ $x -eq 5 ]; then
     echo "you choose to Select From Table"
     selectFromTable
+
   elif [ $x -eq 6 ]; then
     echo "you choose to Delete From Table "
     deleteFromTable
@@ -46,17 +50,16 @@ function tablesMenu {
   elif [ $x -eq 8 ]; then
     metadataFun
   elif [ $x -eq 9 ]; then
-    echo "you choose to update table"
-    updateTable
-    tablesMenu
-  elif [ $x -eq 10 ]; then
     echo "you choose to disconnect"
     mainMenu
+  elif [ $x -eq 10 ]; then
+    echo "update"
+    updateTable
+
   else
     echo "please choose one of the menu"
   fi
 }
-
 function deleteFromTable {
 
   clear
@@ -164,6 +167,45 @@ function listTables {
 # *********************************************************************************
 
 # ***********************************************************************************
+function updateTable {
+  echo -e "Enter Table Name: \c"
+  read tableName
+  echo -e "Enter Condition Column name: \c"
+  read field
+  fid=$(awk 'BEGIN{FS=","}{if(NR==5){for(i=1;i<=NF;i++){if($i=="'$field'") print i}}}' ".${tableName}_metadata")
+  echo "$fid"
+  if [[ $fid == "" ]]; then
+    echo "Not Found"
+    tablesMenu
+  else
+    echo -e "Enter Condition Value: \c"
+    read val
+    res=$(awk 'BEGIN{FS=","}{if ($'$fid'=="'$val'") print '$fid'}' "${tableName}" 2>>./.error.log)
+    echo "$res"
+    if [[ $res == "" ]]; then
+      echo "Value Not Found"
+      tablesMenu
+    else
+      echo -e "Enter FIELD name to set: \c"
+      read setField
+      setFid=$(awk 'BEGIN{FS=","}{if(NR==5){for(i=1;i<=NF;i++){if($i=="'$setField'") print i}}}' ".${tableName}_metadata")
+      echo "$setFid"
+      if [[ $setFid == "" ]]; then
+        echo "Not Found"
+        tablesMenu
+      else
+        echo -e "Enter new Value to set: \c"
+        read newValue
+        NR=$(awk 'BEGIN{FS=","}{if ($'$fid' == "'$val'") print NR}' "${tableName}" 2>>./.error.log)
+        oldValue=$(awk 'BEGIN{FS=","}{if(NR=='$NR'){for(i=1;i<=NF;i++){if(i=='$setFid') print $i}}}' "${tableName}" 2>>./.error.log)
+        echo $oldValue
+        sed -i ''$NR's/'$oldValue'/'$newValue'/g' "${tableName}" 2>>./.error.log
+        echo "Row Updated Successfully"
+        tablesMenu
+      fi
+    fi
+  fi
+}
 
 function createTable {
   echo " please enter a name for the table"
@@ -267,7 +309,8 @@ function dropTable {
 }
 
 function insertIntoTable {
-  echo "You choose to Insert into Table"
+
+  echo "you choose to Insert into Table"
   listTables
   read -rp "Enter the table name: " tableName
 
@@ -275,30 +318,29 @@ function insertIntoTable {
   if [[ -f "${tableName}" ]]; then
     typeset -i cols=$(awk -F, '{if(NR==5){print NF}}' ".${tableName}_metadata")
 
-    declare -a values=()
-
-    for ((i = 2; i <= $cols; i++)); do
+    for ((i = 1; i <= $cols; i++)); do
       colname=$(awk -F, -v"i=$i" '{if(NR==5){print $i}}' ".${tableName}_metadata")
       echo "Enter $colname: "
       validInput "${insertRegex}"
       value="${input}"
-      values+=("$value")
-    done
 
-    pk_name=$(awk -F, '{if(NR==5){print$1}}' ".${tableName}_metadata")
-    echo "Enter $pk_name: "
-    validInput "${insertRegex}"
-    pk_val="${input}"
-
-    pks=$(sed -n '1,$'p "${tableName}" | cut -f1 -d,)
-    for j in $pks; do
-      if [[ $j -eq $pk_val ]]; then
-        echo "Cannot repeat primary key"
-        tablesMenu
+      if [[ $colname -eq id ]]; then
+        pks=$(sed -n '1,$'p "${tableName}" | cut -f1 -d,)
+        echo "${pks}"
+        echo "************************************************"
+        for j in $pks; do
+          if [[ $j -eq $value ]]; then
+            echo "cannot repeat primary key"
+            tablesMenu
+          fi
+        done
+      fi
+      if [[ $i != $cols ]]; then
+        echo -n $value"," >>"${tableName}"
+      else
+        echo $value >>"${tableName}"
       fi
     done
-
-    echo "$pk_val,${values[*]}" >>"${tableName}"
     echo "Data has been inserted successfully"
     echo
     echo
@@ -309,42 +351,5 @@ function insertIntoTable {
     echo
     tablesMenu
   fi
-}
 
-
-function updateTable {
-  listTables
-  echo "Enter the name of the table you want to update: "
-  validInput "${mixedRegex}"
-  tableName="${input}"
-
-  if [ -f "${tableName}" ]; then
-    echo "Table exists. Enter the $pk_name of the row you want to update: "
-    validInput "${insertRegex}"
-    pk_val="${input}"
-
-    if grep -q "^${pk_val}," "${tableName}"; then
-      pk_col=$(awk -F, '{if(NR==5){print $1}}' ".${tableName}_metadata")
-      cols=$(awk -F, '{if(NR==5){print NF}}' ".${tableName}_metadata")
-      declare -a values=()
-
-      for ((i = 2; i <= $cols; i++)); do
-        colname=$(awk -F, -v"i=$i" '{if(NR==5){print $i}}' ".${tableName}_metadata")
-        echo "Enter new value for $colname: "
-        validInput "${insertRegex}"
-        value="${input}"
-        values+=("$value")
-      done
-
-      sed -i "s/^${pk_val},.*/${pk_val},${values[*]}/" "${tableName}"
-      echo "Row updated successfully."
-      selectFromTable
-    else
-      echo "Row with $pk_col=$pk_val does not exist in the table."
-      tablesMenu
-    fi
-  else
-    echo "Table does not exist."
-    tablesMenu
-  fi
 }
