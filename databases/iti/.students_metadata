@@ -1,5 +1,5 @@
 Table Name:students
-Number of columns:3
+Number of columns:4
 The primary key for this table is: id
 Names of columns: 
-id,moustafa,course
+id,fname,lname,track

@@ -16,7 +16,9 @@ function tablesMenu {
   echo "  8) metadata"
   echo "  9) disconnect"
 
-  read -r x
+  validInput "${numRegexy}"
+
+  x="${input}"
   echo " ***********************************"
 
   if [ $x -eq 1 ]; then
@@ -51,7 +53,7 @@ function tablesMenu {
     mainMenu
 
   else
-    echo "invalid option"
+    echo "please choose one of the menu"
   fi
 }
 function deleteFromTable {
@@ -294,7 +296,7 @@ function insertIntoTable {
         echo $value >>"${tableName}"
       fi
     done
-    echo "Data has been sorted successfully"
+    echo "Data has been inserted successfully"
     echo
     echo
     tablesMenu

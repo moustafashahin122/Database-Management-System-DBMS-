@@ -11,7 +11,11 @@ function mainMenu {
     echo "  2) List Databases"
     echo "  3) connect to database"
     echo "  4) Drop database"
-    read -r n
+
+    validInput "${numRegexy}"
+
+    n="${input}"
+
     echo " ***********************************"
 
     if [ $n -eq 1 ]; then
@@ -61,6 +65,7 @@ function connectDB {
         tablesMenu
     else
         echo "no database with such name"
+        mainMenu
     fi
 
 }
