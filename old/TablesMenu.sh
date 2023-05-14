@@ -79,7 +79,9 @@ function deleteFromTable {
         pk_name=$(awk -F, '{if(NR==5){print$1}}' ".${tableName}_metadata")
         read -p "Enter $pk_name value: " val
         pks=$(sed -n '1,$'p "${tableName}" | cut -f1 -d,)
-
+        echo "********************************"
+        echo "$pks"
+        echo "********************************"
         for j in $pks; do
           if [[ $j -eq "$val" ]]; then
             grep -v ^$val "${tableName}" >temp.csv
@@ -320,16 +322,20 @@ function insertIntoTable {
 
     for ((i = 1; i <= $cols; i++)); do
       colname=$(awk -F, -v"i=$i" '{if(NR==5){print $i}}' ".${tableName}_metadata")
+      pk_name=$(awk -F, '{if(NR==5){print$1}}' ".${tableName}_metadata")
       echo "Enter $colname: "
       validInput "${insertRegex}"
       value="${input}"
-
-      if [[ $colname -eq id ]]; then
+      echo "************************************************"
+      echo "${colname}"
+      echo "************************************************"
+      if [ "$colname" == "${pk_name}" ]; then
         pks=$(sed -n '1,$'p "${tableName}" | cut -f1 -d,)
+        echo "************************************************"
         echo "${pks}"
         echo "************************************************"
         for j in $pks; do
-          if [[ $j -eq $value ]]; then
+          if [ "$j" == "$value" ]; then
             echo "cannot repeat primary key"
             tablesMenu
           fi
@@ -342,8 +348,7 @@ function insertIntoTable {
       fi
     done
     echo "Data has been inserted successfully"
-    echo
-    echo
+
     tablesMenu
 
   else

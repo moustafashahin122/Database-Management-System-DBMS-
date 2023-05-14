@@ -3,6 +3,7 @@
 mixedRegex="^[a-zA-Z][a-zA-Z0-9]{2,}$"
 #regex to validate number of columns
 numRegex="^[1-9]+$"
+strRegex="^[a-zA-Z]+$"
 #to make sure user input for menus is numbers
 numRegexy="^[0-9]+$"
 #validate col name to be at least 2 char with no numbers
@@ -39,4 +40,28 @@ function validInput {
   done
 
 }
+
+function getTypeOfInput {
+  type="not valid"
+  if [[ $1 =~ ${numRegexy} ]]; then
+    type="num"
+
+  elif [[ $1 =~ ${strRegex} ]]; then
+    type="string"
+
+  fi
+
+}
+function validateType {
+  #this function takes  data type (num or string ) as a argument and validate user input
+  read -r input
+  getTypeOfInput "${input}"
+  while ! [[ $type =~ ${1} ]]; do
+    echo "please enter a vald input type"
+    read -r input
+    getTypeOfInput "${input}"
+    echo " ***********************************"
+  done
+}
+
 mainMenu

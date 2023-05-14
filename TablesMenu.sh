@@ -201,11 +201,35 @@ function createTable {
 
         validInput "${colNameRegex}"
         name="${input}"
-        echo -n $name >>".${tableName}_metadata"
+        echo $name >>".${tableName}_metadata"
       else
         echo "Enter column $i name: "
 
         validInput "${colNameRegex}"
+        name="${input}"
+        echo -n $name"," >>".${tableName}_metadata"
+      fi
+    done
+    for ((i = 1; i <= cols; i++)); do
+      echo " write a type num or string"
+      if [[ i -eq 1 ]]; then
+
+        echo "Enter column $i type "
+        validInput "(num|string)"
+        name="${input}"
+
+        echo -n $name"," >>".${tableName}_metadata"
+
+      elif [[ i -eq cols ]]; then
+        echo "Enter column $i type: "
+
+        validInput "(num|string)"
+        name="${input}"
+        echo -n $name >>".${tableName}_metadata"
+      else
+        echo "Enter column $i type: "
+
+        validInput "(num|string)"
         name="${input}"
         echo -n $name"," >>".${tableName}_metadata"
       fi
@@ -267,7 +291,8 @@ function dropTable {
 }
 
 function insertIntoTable {
-  echo "You choose to Insert into Table"
+
+  echo "you choose to Insert into Table"
   listTables
   read -rp "Enter the table name: " tableName
 
@@ -275,33 +300,43 @@ function insertIntoTable {
   if [[ -f "${tableName}" ]]; then
     typeset -i cols=$(awk -F, '{if(NR==5){print NF}}' ".${tableName}_metadata")
 
-    declare -a values=()
-
-    for ((i = 2; i <= $cols; i++)); do
+    for ((i = 1; i <= $cols; i++)); do
       colname=$(awk -F, -v"i=$i" '{if(NR==5){print $i}}' ".${tableName}_metadata")
+      coltype=$(awk -F, -v"i=$i" '{if(NR==6){print $i}}' ".${tableName}_metadata")
+      pk_name=$(awk -F, '{if(NR==5){print$1}}' ".${tableName}_metadata")
       echo "Enter $colname: "
-      validInput "${insertRegex}"
+      echo " enter data with type $coltype"
+
+      validateType "${coltype}"
       value="${input}"
-      values+=("$value")
-    done
 
-    pk_name=$(awk -F, '{if(NR==5){print$1}}' ".${tableName}_metadata")
-    echo "Enter $pk_name: "
-    validInput "${insertRegex}"
-    pk_val="${input}"
-
-    pks=$(sed -n '1,$'p "${tableName}" | cut -f1 -d,)
-    for j in $pks; do
-      if [[ $j -eq $pk_val ]]; then
-        echo "Cannot repeat primary key"
-        tablesMenu
+      echo "************************************************"
+      echo "${colname}"
+      echo "************************************************"
+      if [ "$colname" == "${pk_name}" ]; then
+        pks=$(sed -n '1,$'p "${tableName}" | cut -f1 -d,)
+        echo "************************************************"
+        echo "${pks}"
+        echo "************************************************"
+        for j in $pks; do
+          if [ "$j" == "$value" ]; then
+            echo "cannot repeat primary key"
+            tablesMenu
+          fi
+        done
       fi
-    done
 
-    echo "$pk_val,${values[*]}" >>"${tableName}"
+      if [[ $i != $cols ]]; then
+
+        echo -n "${input}""," >>"${tableName}"
+
+      else
+        echo "${input}" >>"${tableName}"
+      fi
+
+    done
     echo "Data has been inserted successfully"
-    echo
-    echo
+
     tablesMenu
 
   else
@@ -309,8 +344,8 @@ function insertIntoTable {
     echo
     tablesMenu
   fi
-}
 
+}
 
 function updateTable {
   listTables
@@ -330,10 +365,13 @@ function updateTable {
 
       for ((i = 2; i <= $cols; i++)); do
         colname=$(awk -F, -v"i=$i" '{if(NR==5){print $i}}' ".${tableName}_metadata")
+        coltype=$(awk -F, -v"i=$i" '{if(NR==6){print $i}}' ".${tableName}_metadata")
         echo "Enter new value for $colname: "
-        validInput "${insertRegex}"
-        value="${input}"
-        values+=("$value")
+        echo "with type $coltype: "
+
+        validateType "${coltype}"
+
+        values+=("${input}")
       done
 
       sed -i "s/^${pk_val},.*/${pk_val},${values[*]}/" "${tableName}"
