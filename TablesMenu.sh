@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 function tablesMenu {
   cd ${currentDB}
   echo "****************************************"
@@ -37,7 +36,7 @@ function tablesMenu {
   elif [ $x -eq 5 ]; then
     echo "you choose to Select From Table"
     selectFromTable
-    tablesMenu
+
   elif [ $x -eq 6 ]; then
     echo "you choose to Delete From Table "
     deleteFromTable
@@ -112,9 +111,8 @@ function selectFromTable {
       1)
         awk 'BEGIN{FS=","} {if(NR==5){for (i=1;i<=NF;i++) printf "%-10s",$i; print " "}}' ".${tableName}_metadata"
         awk 'BEGIN{FS=","}{for (i=1;i<=NF;i++) printf "%-10s ",$i; print " "}' "${tableName}"
-        echo
-        echo
 
+        tablesMenu
         ;;
 
       2)
@@ -125,13 +123,11 @@ function selectFromTable {
         awk 'BEGIN{FS=","}{for (i=1;i<=NF;i++) printf "%-10s",$i; print " "}' temp2
         rm temp2 2>/dev/null
 
-        echo
-        echo
-
+        tablesMenu
         ;;
       *)
         echo wrong choice
-
+        tablesMenu
         ;;
       esac
     done
@@ -139,6 +135,7 @@ function selectFromTable {
   else
     echo
     echo There is no table with this name
+    tablesMenu
 
   fi
 }
